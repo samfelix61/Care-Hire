@@ -1,10 +1,9 @@
-
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_serializer import SerializerMixin
-db = SQLAlchemy()
 from sqlalchemy.orm import validates
-
 from datetime import datetime
+
+db = SQLAlchemy()
 
 # Models
 class User(db.Model):
@@ -12,120 +11,52 @@ class User(db.Model):
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
+    role = db.Column(db.String(50), nullable=False)
+    profile_image = db.Column(db.String(200), nullable=True)
+    phone_number = db.Column(db.String(20), nullable=False)
 
-    tasks = db.relationship('Task', backref='user', lazy=True)
+    reviews = db.relationship('Review', backref='user', lazy=True)
+    bookings = db.relationship('Booking', backref='user', lazy=True)
 
 
-class Task(db.Model):
+class CarOwner(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(120), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    completed = db.Column(db.Boolean, default=False)
+    name = db.Column(db.String(100), nullable=False)
+    phone_number = db.Column(db.String(20), nullable=False)
+    profile_image = db.Column(db.String(200), nullable=True)
 
+    cars = db.relationship('Car', backref='owner', lazy=True)
+    bookings = db.relationship('Booking', backref='car_owner', lazy=True)
+
+
+class Car(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    make = db.Column(db.String(50), nullable=False)
+    model = db.Column(db.String(50), nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    price_per_day = db.Column(db.Float, nullable=False)
+    availability_status = db.Column(db.Boolean, default=True)
+    car_image_url = db.Column(db.String(200), nullable=True)
+    
+    owner_id = db.Column(db.Integer, db.ForeignKey('car_owner.id'), nullable=False)
+    reviews = db.relationship('Review', backref='car', lazy=True)
+    bookings = db.relationship('Booking', backref='car', lazy=True)
+
+
+class Review(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    rating = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.Text, nullable=True)
+    
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    car_id = db.Column(db.Integer, db.ForeignKey('car.id'), nullable=False)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-# class Student(db.Model, SerializerMixin):
-#     id = db.Column(db.Integer, primary_key=True)
-#     name = db.Column(db.String(50), nullable=False)
-#     age = db.Column(db.Integer, nullable=True)
-#     email= db.Column(db.String(50), nullable=False)
-
-#     courses = db.relationship('Course', backref='student', lazy=True)
-#     # serialize_rules = ('-courses.student',)
-#     def to_dict(self):
-#         return {
-#         "id" : self.id,
-#         "name" : self.name,
-#         "age" : self.age,
-#         "email" : self.email,
-#         "courses" : [course.to_dict() for course in self.courses]
-#         }
+class Booking(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
     
-#     @validates('email')
-#     def validate_email(self,key, email):
-#         if "@" not in email:
-#             raise ValueError("Invalid email")
-#         return email
- 
-
-
-# class Course(db.Model, SerializerMixin):
-#     id = db.Column(db.Integer, primary_key=True)
-#     name = db.Column(db.String(50), nullable=False)
-#     code = db.Column(db.String(50), nullable=False)
-#     description = db.Column(db.String(50), nullable=False)
-
-#     student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
-
-#     def to_dict(self):
-
-#         return {
-#         "id" : self.id   ,
-#         "name" : self.name,
-#         "code" : self.code,
-#         "description" : self.description,
-#         "student_id" : self.student_id
-        
-#         }
-
-
-
-# class Student(db.Model, SerializerMixin):
-#     id = db.Column(db.Integer, primary_key=True)
-#     name = db.Column(db.String(50), nullable=False)
-#     age = db.Column(db.Integer, nullable=True)
-#     email= db.Column(db.String(50), nullable=False)
-
-#     courses = db.relationship('Course', backref='student', lazy=True)
-#     # serialize_rules = ('-courses.student',)
-#     def to_dict(self):
-#         return {
-#         "id" : self.id,
-#         "name" : self.name,
-#         "age" : self.age,
-#         "email" : self.email,
-#         "courses" : [course.to_dict() for course in self.courses]
-#         }
-    
-#     @validates('email')
-#     def validate_email(self,key, email):
-#         if "@" not in email:
-#             raise ValueError("Invalid email")
-#         return email
- 
-
-
-# class Course(db.Model, SerializerMixin):
-#     id = db.Column(db.Integer, primary_key=True)
-#     name = db.Column(db.String(50), nullable=False)
-#     code = db.Column(db.String(50), nullable=False)
-#     description = db.Column(db.String(50), nullable=False)
-
-#     student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
-
-#     def to_dict(self):
-
-#         return {
-#         "id" : self.id   ,
-#         "name" : self.name,
-#         "code" : self.code,
-#         "description" : self.description,
-#         "student_id" : self.student_id
-        
-#         }
-
-
-
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    car_id = db.Column(db.Integer, db.ForeignKey('car.id'), nullable=False)
+    car_owner_id = db.Column(db.Integer, db.ForeignKey('car_owner.id'), nullable=False)
